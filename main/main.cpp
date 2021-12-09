@@ -5,7 +5,7 @@
 #include <string.h>
 #include <WiFi.h>
 #include <Preferences.h> // WiFi storage
-#include <HTTPClient.h>
+#include <PubSubClient.h>
 
 int ClearWifiPin = 4;
 
@@ -19,8 +19,14 @@ int32_t rssi; // store WiFi signal strength here
 String getSsid;
 String getPass;
 String MAC;
-String serverPath = "http://112.124.29.237:8086/saveDeviceData";
-HTTPClient http;
+
+WiFiClient espClient;
+PubSubClient client(espClient);
+const char* mqtt_server = "192.168.123.46";
+unsigned long lastMsg = 0;
+#define MSG_BUFFER_SIZE	(50)
+char msg[MSG_BUFFER_SIZE];
+int value = 0;
 
 // SSID storage
 Preferences preferences; // declare class object
@@ -276,14 +282,47 @@ void setup()
   Serial.println(" ");
 
   delay(3000);
+  client.setServer(mqtt_server, 1883);
 } //  END setup()
+
+void reconnect() {
+  while (!client.connected()) {
+    Serial.println("Attempting MQTT connection...");
+    if (client.connect("ESP32_clientID")) {
+      Serial.println("connected");
+      // Once connected, publish an announcement...
+      client.publish("outTopic", "Nodemcu connected to MQTT");
+      // ... and resubscribe
+      client.subscribe("inTopic");
+
+    } else {
+      Serial.print("failed, rc=");
+      Serial.print(client.state());
+      Serial.println(" try again in 5 seconds");
+      // Wait 5 seconds before retrying
+      delay(5000);
+    }
+  }
+}
 
 void loop()
 {
   if (WiFi.status() == WL_CONNECTED)
   {
-    Serial.println("Hello World");
-    delay(1000);
+    if (!client.connected()) {
+      reconnect();
+    }
+    client.loop();
+
+    unsigned long now = millis();
+    if (now - lastMsg > 2000) {
+      lastMsg = now;
+      ++value;
+      snprintf (msg, MSG_BUFFER_SIZE, "hello world #%d", value);
+      Serial.print("Publish message: ");
+      Serial.println(msg);
+      client.publish("outTopic", msg);
+    }
   } // END Main connected loop()
   else
   {
