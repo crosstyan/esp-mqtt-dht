@@ -8,7 +8,7 @@
 #include <WiFi.h>
 #include <Preferences.h> // WiFi storage
 
-extern int ClearWifiPin;
+extern const int ClearWifiPin;
 
 extern const char *rssiSSID; // NO MORE hard coded set AP, all SmartConfig
 extern const char *password;
