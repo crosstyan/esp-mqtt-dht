@@ -4,3 +4,12 @@
 [submodule "components/ArduinoJson"]
 	path = components/ArduinoJson
 	url = https://github.com/bblanchon/ArduinoJson
+[submodule "components/arduino-libs/Adafruit_Sensor"]
+	path = components/arduino-libs/Adafruit_Sensor
+	url = https://github.com/adafruit/Adafruit_Sensor
+[submodule "components/arduino-libs/DHT-sensor-library"]
+	path = components/arduino-libs/DHT-sensor-library
+	url = https://github.com/adafruit/DHT-sensor-library
+[submodule "components/arduino-libs/pubsubclient"]
+	path = components/arduino-libs/pubsubclient
+	url = https://github.com/knolleary/pubsubclient
