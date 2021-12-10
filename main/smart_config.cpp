@@ -3,7 +3,7 @@
 #include "smart_config.hpp"
 #endif  // SRC_ASYNCMQTTCLIENT_H_
 
-int ClearWifiPin = 4;
+const int ClearWifiPin = 4;
 
 const char *rssiSSID; // NO MORE hard coded set AP, all SmartConfig
 const char *password;

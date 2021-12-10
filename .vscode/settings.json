@@ -1,0 +1,32 @@
+{
+  "files.associations": {
+    ".spacemacs": "lisp",
+    ".emacs": "lisp",
+    "*.spacemacs": "lisp",
+    "array": "cpp",
+    "*.tcc": "cpp",
+    "chrono": "cpp",
+    "string": "cpp",
+    "unordered_map": "cpp",
+    "algorithm": "cpp",
+    "functional": "cpp",
+    "memory": "cpp",
+    "memory_resource": "cpp",
+    "optional": "cpp",
+    "random": "cpp",
+    "ratio": "cpp",
+    "system_error": "cpp",
+    "tuple": "cpp",
+    "type_traits": "cpp",
+    "cmath": "cpp",
+    "fstream": "cpp",
+    "future": "cpp",
+    "istream": "cpp",
+    "numeric": "cpp",
+    "ostream": "cpp",
+    "thread": "cpp",
+    "regex": "cpp",
+    "utility": "cpp",
+    "*.ipp": "cpp"
+  }
+}

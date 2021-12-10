@@ -9,10 +9,15 @@
 #include <PubSubClient.h>
 #include <DHT.h>
 
+#define DHTPIN 2     // Digital pin connected to the DHT sensor
+#define DHTTYPE DHT11   // DHT 11
+
+DHT dht(DHTPIN, DHTTYPE);
 
 WiFiClient espClient;
 PubSubClient client(espClient);
-const char* mqtt_server = "192.168.123.46";
+const char* MQTT_HOST = "192.168.43.4";
+const int MQTT_PORT = 1883;
 unsigned long lastMsg = 0;
 #define MSG_BUFFER_SIZE	(50)
 char msg[MSG_BUFFER_SIZE];
@@ -38,7 +43,8 @@ void setup()
   Serial.println(" ");
 
   delay(3000);
-  client.setServer(mqtt_server, 1883);
+  client.setServer(MQTT_HOST, MQTT_PORT);
+  dht.begin();
 } //  END setup()
 
 void MQTT_reconnect() {
@@ -61,6 +67,26 @@ void MQTT_reconnect() {
   }
 }
 
+int readAndPublish() {
+  float h = dht.readHumidity();
+  // Read temperature as Celsius (the default)
+  float t = dht.readTemperature();
+  char hMsg[20];
+  char tMsg[20];
+
+  // Check if any reads failed and exit early (to try again).
+  if (isnan(h) || isnan(t)) {
+    Serial.println(F("Failed to read from DHT sensor!"));
+    return 1;
+  }
+  snprintf (hMsg, 20, "%.1f", h);
+  snprintf (tMsg, 20, "%.1f", t);
+
+  client.publish("temperature", tMsg);
+  client.publish("humidity", hMsg);
+  return 0;
+}
+
 void loop()
 {
   if (WiFi.status() == WL_CONNECTED)
@@ -77,7 +103,8 @@ void loop()
       snprintf (msg, MSG_BUFFER_SIZE, "hello world #%d", value);
       Serial.print("Publish message: ");
       Serial.println(msg);
-      client.publish("outTopic", msg);
+      client.publish("hello", msg);
+      readAndPublish();
     }
   } // END Main connected loop()
   else
