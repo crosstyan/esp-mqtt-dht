@@ -20,6 +20,7 @@ extern int32_t rssi; // store WiFi signal strength here
 extern String getSsid;
 extern String getPass;
 extern String MAC;
+extern uint8_t getRvd[128];
 
 // SSID storage
 extern Preferences preferences; // declare class object

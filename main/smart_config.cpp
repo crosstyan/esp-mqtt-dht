@@ -8,20 +8,22 @@ const int ClearWifiPin = 4;
 const char *rssiSSID; // NO MORE hard coded set AP, all SmartConfig
 const char *password;
 String PrefSSID, PrefPassword; // used by preferences storage
+// User's custom data, nullable. If not null, the max length is 127
 
 int WFstatus;
 int UpCount = 0;
 int32_t rssi; // store WiFi signal strength here
 String getSsid;
 String getPass;
+// String getRvd;
+uint8_t getRvd[128];
 String MAC;
 
 // SSID storage
 Preferences preferences; // declare class object
 // END SSID storage
 
-void wifiInit() //
-{
+void wifiInit() {
   WiFi.mode(WIFI_AP_STA); // required to read NVR before WiFi.begin()
 
   // load credentials from NVR, a little RTOS code here
@@ -34,13 +36,15 @@ void wifiInit() //
   preferences.begin("wifi", false);
   PrefSSID = preferences.getString("ssid", "none");         // NVS key ssid
   PrefPassword = preferences.getString("password", "none"); // NVS key password
+  preferences.getBytes("rvd", getRvd, 128); // SmartConfig Reserved Data
   preferences.end();
 
   // keep from rewriting flash if not needed
-  if (!checkPrefsStore())   // see is NV and Prefs are the same
-  {                         // not the same, setup with SmartConfig
-    if (PrefSSID == "none") // New...setup wifi
-    {
+  // see is NV and Prefs are the same
+  if (!checkPrefsStore()) {
+    // not the same, setup with SmartConfig
+    // New...setup wifi
+    if (PrefSSID == "none") {
       initSmartConfig();
       delay(3000);
       ESP.restart(); // reboot with wifi configured
@@ -97,13 +101,13 @@ void initSmartConfig() {
   WiFi.mode(WIFI_AP_STA); // Init WiFi, start SmartConfig
   Serial.printf("Entering SmartConfig\n");
 
-  WiFi.beginSmartConfig();
+  WiFi.beginSmartConfigV2();
 
   while (!WiFi.smartConfigDone()) {
     // flash led to indicate not configured
     Serial.printf(".");
-    if (loopCounter >= 40) // keep from scrolling sideways forever
-    {
+    // keep from scrolling sideways forever
+    if (loopCounter >= 40) {
       loopCounter = 0;
       Serial.printf("\n");
     }
@@ -113,19 +117,20 @@ void initSmartConfig() {
   loopCounter = 0;
 
   // stopped flasher here
-
   Serial.printf("\nSmartConfig received.\n Waiting for WiFi\n\n");
   delay(2000);
-
-  while (WiFi.status() != WL_CONNECTED) // check till connected
-  {
+  // check till connected
+  while (WiFi.status() != WL_CONNECTED) {
     delay(500);
   }
-  IP_info(); // connected lets see IP info
+  IP_info();                            // connected lets see IP info
+  WiFi.smartConfigRvdData(getRvd, 127); // get SmartConfig Reserved Data
 
   preferences.begin("wifi", false); // put it in storage
   preferences.putString("ssid", getSsid);
   preferences.putString("password", getPass);
+  // preferences.putString("rvd", getRvd);
+  preferences.putBytes("rvd", getRvd, 128);
   preferences.end();
 
   delay(300);
@@ -212,6 +217,9 @@ int32_t getRSSI(const char *target_ssid) {
   return 0;
 } //  END  getRSSI()
 
+// Why the original guy use string to represent the SSID and password?
+// Maybe it's not a bad choose though.
+// TODO: Use enum instead
 // Requires; #include <esp_wifi.h>
 // Returns String NONE, ssid or pass arcording to request
 // ie String var = getSsidPass( "pass" );

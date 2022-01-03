@@ -26,6 +26,7 @@ int value = 0;
 
 void setup() {
   Serial.begin(115200);
+  // Clear the preferences if the pin is high
   preferences.begin("wifi", false);
   bool isSmartConfig = digitalRead(ClearWifiPin);
   if (isSmartConfig == true) {
@@ -37,6 +38,16 @@ void setup() {
   Serial.printf("\tWiFi Setup -- \n");
 
   wifiInit(); // get WiFi connected
+  // Print out Reserved Data
+  Serial.println((char *)getRvd);
+  // Print out Reserved Data as Hex if it's not empty
+  char *rvdCursor = (char *)getRvd;
+  while (*rvdCursor) {
+    Serial.printf("%02x", *rvdCursor);
+    rvdCursor++;
+  }
+  printf("\n");
+  // end of Printing
   IP_info();
   MAC = getMacAddress();
   Serial.println(" ");
