@@ -16,7 +16,7 @@ int32_t rssi; // store WiFi signal strength here
 String getSsid;
 String getPass;
 // String getRvd;
-uint8_t getRvd[128];
+uint8_t getRvd[128] = {0};
 String MAC;
 
 // SSID storage
@@ -101,7 +101,7 @@ void initSmartConfig() {
   WiFi.mode(WIFI_AP_STA); // Init WiFi, start SmartConfig
   Serial.printf("Entering SmartConfig\n");
 
-  WiFi.beginSmartConfigV2();
+  WiFi.beginSmartConfig();
 
   while (!WiFi.smartConfigDone()) {
     // flash led to indicate not configured
@@ -123,9 +123,9 @@ void initSmartConfig() {
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
   }
-  IP_info();                            // connected lets see IP info
-  WiFi.smartConfigRvdData(getRvd, 127); // get SmartConfig Reserved Data
-
+  IP_info(); // connected lets see IP info
+  uint8_t* smartConfigRvdData = WiFi.smartConfigRvdData();
+  memcpy(getRvd, smartConfigRvdData, sizeof(uint8_t)*127);
   preferences.begin("wifi", false); // put it in storage
   preferences.putString("ssid", getSsid);
   preferences.putString("password", getPass);
@@ -188,9 +188,9 @@ int getWifiStatus(int WiFiStatus) {
   }
   return WiFiStatus;
 }
-// END getWifiStatus()
 
-// Get the station interface MAC address.
+// @brief     Get the station interface MAC address.
+// @param     void
 // @return String MAC
 String getMacAddress(void) {
   WiFi.mode(WIFI_AP_STA); // required to read NVR before WiFi.begin()
@@ -201,7 +201,6 @@ String getMacAddress(void) {
           baseMac[2], baseMac[3], baseMac[4], baseMac[5]);
   return String(macStr);
 }
-// END getMacAddress()
 
 // Return RSSI or 0 if target SSID not found
 // const char* SSID = "YOUR_SSID";  // declare in GLOBAL space
