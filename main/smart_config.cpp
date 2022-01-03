@@ -1,7 +1,7 @@
 #ifndef SRC_SMART_CONFIG_H_
 #define SRC_SMART_CONFIG_H_
 #include "smart_config.hpp"
-#endif  // SRC_ASYNCMQTTCLIENT_H_
+#endif // SRC_ASYNCMQTTCLIENT_H_
 
 const int ClearWifiPin = 4;
 
@@ -52,7 +52,8 @@ void wifiInit() //
   WiFi.begin(PrefSSID.c_str(), PrefPassword.c_str());
 
   int WLcount = 0;
-  while (WiFi.status() != WL_CONNECTED && WLcount < 200) // can take > 100 loops depending on router settings
+  while (WiFi.status() != WL_CONNECTED &&
+         WLcount < 200) // can take > 100 loops depending on router settings
   {
     delay(100);
     Serial.printf(".");
@@ -64,23 +65,23 @@ void wifiInit() //
 
 } // END wifiInit()
 
-// match WiFi IDs in NVS to Pref store,  assumes WiFi.mode(WIFI_AP_STA);  was executed
-bool checkPrefsStore()
-{
+// match WiFi IDs in NVS to Pref store,  assumes WiFi.mode(WIFI_AP_STA);  was
+// executed
+bool checkPrefsStore() {
   bool val = false;
   String NVssid, NVpass, prefssid, prefpass;
 
   NVssid = getSsidPass("ssid");
   NVpass = getSsidPass("pass");
 
-  // Open Preferences with my-app namespace. Namespace name is limited to 15 chars
+  // Open Preferences with my-app namespace. Namespace name is limited to 15
+  // chars
   preferences.begin("wifi", false);
   prefssid = preferences.getString("ssid", "none");     // NVS key ssid
   prefpass = preferences.getString("password", "none"); // NVS key password
   preferences.end();
 
-  if (NVssid.equals(prefssid) && NVpass.equals(prefpass))
-  {
+  if (NVssid.equals(prefssid) && NVpass.equals(prefpass)) {
     val = true;
   }
 
@@ -89,8 +90,7 @@ bool checkPrefsStore()
 
 // optionally call this function any way you want in your own code
 // to remap WiFi to another AP using SmartConfig mode.   Button, condition etc..
-void initSmartConfig()
-{
+void initSmartConfig() {
   // start LED flasher
   int loopCounter = 0;
 
@@ -99,8 +99,7 @@ void initSmartConfig()
 
   WiFi.beginSmartConfig();
 
-  while (!WiFi.smartConfigDone())
-  {
+  while (!WiFi.smartConfigDone()) {
     // flash led to indicate not configured
     Serial.printf(".");
     if (loopCounter >= 40) // keep from scrolling sideways forever
@@ -132,8 +131,7 @@ void initSmartConfig()
   delay(300);
 } // END SmartConfig()
 
-void IP_info()
-{
+void IP_info() {
   getSsid = WiFi.SSID();
   getPass = WiFi.psk();
   rssi = getRSSI(rssiSSID);
@@ -155,12 +153,10 @@ void IP_info()
   Serial.printf("\tMAC:\t\t%s\n", MAC.c_str());
 }
 
-int getWifiStatus(int WiFiStatus)
-{
+int getWifiStatus(int WiFiStatus) {
   WiFiStatus = WiFi.status();
   Serial.printf("\tStatus %d", WiFiStatus);
-  switch (WiFiStatus)
-  {
+  switch (WiFiStatus) {
   case WL_IDLE_STATUS: // WL_IDLE_STATUS     = 0,
     Serial.printf(", WiFi IDLE \n");
     break;
@@ -191,13 +187,13 @@ int getWifiStatus(int WiFiStatus)
 
 // Get the station interface MAC address.
 // @return String MAC
-String getMacAddress(void)
-{
+String getMacAddress(void) {
   WiFi.mode(WIFI_AP_STA); // required to read NVR before WiFi.begin()
   uint8_t baseMac[6];
   esp_read_mac(baseMac, ESP_MAC_WIFI_STA); // Get MAC address for WiFi station
   char macStr[18] = {0};
-  sprintf(macStr, "%02X:%02X:%02X:%02X:%02X:%02X", baseMac[0], baseMac[1], baseMac[2], baseMac[3], baseMac[4], baseMac[5]);
+  sprintf(macStr, "%02X:%02X:%02X:%02X:%02X:%02X", baseMac[0], baseMac[1],
+          baseMac[2], baseMac[3], baseMac[4], baseMac[5]);
   return String(macStr);
 }
 // END getMacAddress()
@@ -205,14 +201,11 @@ String getMacAddress(void)
 // Return RSSI or 0 if target SSID not found
 // const char* SSID = "YOUR_SSID";  // declare in GLOBAL space
 // call:  int32_t rssi = getRSSI( SSID );
-int32_t getRSSI(const char *target_ssid)
-{
+int32_t getRSSI(const char *target_ssid) {
   byte available_networks = WiFi.scanNetworks();
 
-  for (int network = 0; network < available_networks; network++)
-  {
-    if (strcmp(WiFi.SSID(network).c_str(), target_ssid) == 0)
-    {
+  for (int network = 0; network < available_networks; network++) {
+    if (strcmp(WiFi.SSID(network).c_str(), target_ssid) == 0) {
       return WiFi.RSSI(network);
     }
   }
@@ -222,18 +215,15 @@ int32_t getRSSI(const char *target_ssid)
 // Requires; #include <esp_wifi.h>
 // Returns String NONE, ssid or pass arcording to request
 // ie String var = getSsidPass( "pass" );
-String getSsidPass(String s)
-{
+String getSsidPass(String s) {
   String val = "NONE"; // return "NONE" if wrong key sent
   s.toUpperCase();
-  if (s.compareTo("SSID") == 0)
-  {
+  if (s.compareTo("SSID") == 0) {
     wifi_config_t conf;
     esp_wifi_get_config(WIFI_IF_STA, &conf);
     val = String(reinterpret_cast<const char *>(conf.sta.ssid));
   }
-  if (s.compareTo("PASS") == 0)
-  {
+  if (s.compareTo("PASS") == 0) {
     wifi_config_t conf;
     esp_wifi_get_config(WIFI_IF_STA, &conf);
     val = String(reinterpret_cast<const char *>(conf.sta.password));

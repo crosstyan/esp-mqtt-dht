@@ -3,10 +3,10 @@
 #include "Arduino.h"
 #include "FS.h"
 #include "esp_system.h"
+#include <Preferences.h> // WiFi storage
+#include <WiFi.h>
 #include <esp_wifi.h>
 #include <string.h>
-#include <WiFi.h>
-#include <Preferences.h> // WiFi storage
 
 extern const int ClearWifiPin;
 

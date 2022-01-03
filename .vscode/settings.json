@@ -28,5 +28,6 @@
     "regex": "cpp",
     "utility": "cpp",
     "*.ipp": "cpp"
-  }
+  }, 
+  "editor.formatOnSave": true
 }
