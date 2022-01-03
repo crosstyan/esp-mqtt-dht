@@ -1,6 +1,7 @@
 [submodule "components/arduino"]
 	path = components/arduino
-	url = https://github.com/espressif/arduino-esp32
+	url = https://github.com/crosstyan/arduino-esp32
+        branch = feature/esptouchv2
 [submodule "components/ArduinoJson"]
 	path = components/ArduinoJson
 	url = https://github.com/bblanchon/ArduinoJson
