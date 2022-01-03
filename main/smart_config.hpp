@@ -3,10 +3,10 @@
 #include "Arduino.h"
 #include "FS.h"
 #include "esp_system.h"
+#include <Preferences.h> // WiFi storage
+#include <WiFi.h>
 #include <esp_wifi.h>
 #include <string.h>
-#include <WiFi.h>
-#include <Preferences.h> // WiFi storage
 
 extern const int ClearWifiPin;
 
@@ -20,6 +20,7 @@ extern int32_t rssi; // store WiFi signal strength here
 extern String getSsid;
 extern String getPass;
 extern String MAC;
+extern uint8_t getRvd[128];
 
 // SSID storage
 extern Preferences preferences; // declare class object

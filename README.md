@@ -52,6 +52,12 @@ idf.py -p COM9 flash
 
 ### SmartConfig
 
+I made some modifications to [arduino-esp32
+](https://github.com/crosstyan/arduino-esp32/commit/cd44f4a5773da007b0b8997f11f5c2e1772a2202) to make it work with ESPTOUCH v2 in
+order to use the reserved filed, which means that the ESPTOUCH v1 is not available anymore.
+
+User's custom data, the max length is 127. The configuration should be easier now with reserved field. Check [EspressifApp/lib-esptouch-v2-android](https://github.com/EspressifApp/lib-esptouch-v2-android/tree/main/esptouch-v2) for more information.
+
 The device is configured to connect to the AP with [SmartConfig](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/network/esp_smartconfig.html)
 and SSID and password are saved in the device after the first connection.
 
@@ -73,3 +79,7 @@ Move the library you need to `components/arduino-libs` directory and then
 edit `CMakeLists.txt`.
 
 Add all the `cpp` files in your library directory to `LIB_SRCS` varible in `CMakeLists.txt`. Don't forget to add inlude directories to `LIB_INCLUDE_DIRS`.
+
+## Useful Links
+
+- [esp-idf/examples/wifi/smart_config at espressif/esp-idf](https://github.com/espressif/esp-idf/tree/1cb31e50943bb757966ca91ed7f4852692a5b0ed/examples/wifi/smart_config)

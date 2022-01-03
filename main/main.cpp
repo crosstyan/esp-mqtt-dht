@@ -1,35 +1,35 @@
 #include "Arduino.h"
 #include "FS.h"
+#include "esp_event.h"
 #include "esp_system.h"
+#include "smart_config.h"
+#include <DHT.h>
+#include <Preferences.h> // WiFi storage
+#include <PubSubClient.h>
+#include <WiFi.h>
 #include <esp_wifi.h>
 #include <string.h>
-#include <WiFi.h>
-#include <Preferences.h> // WiFi storage
-#include "smart_config.h"
-#include <PubSubClient.h>
-#include <DHT.h>
 
-#define DHTPIN 2     // Digital pin connected to the DHT sensor
-#define DHTTYPE DHT11   // DHT 11
+#define DHTPIN 2      // Digital pin connected to the DHT sensor
+#define DHTTYPE DHT11 // DHT 11
 
 DHT dht(DHTPIN, DHTTYPE);
 
 WiFiClient espClient;
 PubSubClient client(espClient);
-const char* MQTT_HOST = "192.168.43.4";
+const char *MQTT_HOST = "192.168.43.4";
 const int MQTT_PORT = 1883;
 unsigned long lastMsg = 0;
-#define MSG_BUFFER_SIZE	(50)
+#define MSG_BUFFER_SIZE (50)
 char msg[MSG_BUFFER_SIZE];
 int value = 0;
 
-void setup()
-{
+void setup() {
   Serial.begin(115200);
+  // Clear the preferences if the pin is high
   preferences.begin("wifi", false);
   bool isSmartConfig = digitalRead(ClearWifiPin);
-  if (isSmartConfig == true)
-  {
+  if (isSmartConfig == true) {
     Serial.println("clear config");
     preferences.clear();
   }
@@ -38,11 +38,23 @@ void setup()
   Serial.printf("\tWiFi Setup -- \n");
 
   wifiInit(); // get WiFi connected
+  // Print out Reserved Data
+  Serial.println((char *)getRvd);
+  // Print out Reserved Data as Hex if it's not empty
+  char *rvdCursor = (char *)getRvd;
+  while (*rvdCursor) {
+    Serial.printf("%02x", *rvdCursor);
+    rvdCursor++;
+  }
+  printf("\n");
+  // end of Printing
   IP_info();
   MAC = getMacAddress();
   Serial.println(" ");
 
   delay(3000);
+  Serial.printf("MQTT Host: %s\n", MQTT_HOST);
+  Serial.printf("MQTT Port: %d\n", MQTT_PORT);
   client.setServer(MQTT_HOST, MQTT_PORT);
   dht.begin();
 } //  END setup()
@@ -56,7 +68,6 @@ void MQTT_reconnect() {
       client.publish("outTopic", "Nodemcu connected to MQTT");
       // ... and resubscribe
       client.subscribe("inTopic");
-
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
@@ -79,18 +90,16 @@ int readAndPublish() {
     Serial.println(F("Failed to read from DHT sensor!"));
     return 1;
   }
-  snprintf (hMsg, 20, "%.1f", h);
-  snprintf (tMsg, 20, "%.1f", t);
+  snprintf(hMsg, 20, "%.1f", h);
+  snprintf(tMsg, 20, "%.1f", t);
 
   client.publish("temperature", tMsg);
   client.publish("humidity", hMsg);
   return 0;
 }
 
-void loop()
-{
-  if (WiFi.status() == WL_CONNECTED)
-  {
+void loop() {
+  if (WiFi.status() == WL_CONNECTED) {
     if (!client.connected()) {
       MQTT_reconnect();
     }
@@ -100,22 +109,20 @@ void loop()
     if (now - lastMsg > 2000) {
       lastMsg = now;
       ++value;
-      snprintf (msg, MSG_BUFFER_SIZE, "hello world #%d", value);
+      snprintf(msg, MSG_BUFFER_SIZE, "hello world #%d", value);
       Serial.print("Publish message: ");
       Serial.println(msg);
       client.publish("hello", msg);
       readAndPublish();
     }
   } // END Main connected loop()
-  else
-  {
+  else {
     // WiFi DOWN
     //  wifi down start LED flasher here
     WFstatus = getWifiStatus(WFstatus);
     WiFi.begin(PrefSSID.c_str(), PrefPassword.c_str());
     int WLcount = 0;
-    while (WiFi.status() != WL_CONNECTED && WLcount < 200)
-    {
+    while (WiFi.status() != WL_CONNECTED && WLcount < 200) {
       delay(100);
       Serial.printf(".");
 
@@ -128,12 +135,9 @@ void loop()
       ++WLcount;
     }
 
-    if (getWifiStatus(WFstatus) == 3)
-    {
+    if (getWifiStatus(WFstatus) == 3) {
       // stop LED flasher, wifi going up
-    }
-    else if (getWifiStatus(WFstatus) == 6)
-    {
+    } else if (getWifiStatus(WFstatus) == 6) {
 
       // Should delete it if button is pressed
       // initSmartConfig();
