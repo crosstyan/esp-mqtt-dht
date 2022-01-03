@@ -80,6 +80,57 @@ edit `CMakeLists.txt`.
 
 Add all the `cpp` files in your library directory to `LIB_SRCS` varible in `CMakeLists.txt`. Don't forget to add inlude directories to `LIB_INCLUDE_DIRS`.
 
+## CMake Configuration
+
+### Visual Studio Code and Visual Studio
+
+VSCode with [vscode-cpptools](https://github.com/microsoft/vscode-cpptools) and
+Visual Studio use [cmake-presets](https://cmake.org/cmake/help/latest/manual/cmake-presets.7.html)
+(See [CMakeUserPresets.json](https://docs.microsoft.com/en-us/cpp/build/cmake-presets-json-reference?view=msvc-170)) to generate build files.
+
+```jsonc
+{
+  "version": 2,
+  "configurePresets": [
+    {
+      "name": "esp32",
+      "displayName": "ESP32",
+      "description": "Target ESP32",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        // I doubt that this is the correct way to do it.
+        // Maybe it won't do anything
+        // Personally I prefer to set all the environment variables in system.
+        "PATH": "C:\\tools\\esp-idf\\components\\esptool_py\\esptool;C:\\tools\\esp-idf\\components\\app_update;C:\\tools\\esp-idf\\components\\espcoredump;C:\\tools\\esp-idf\\components\\partition_table;C:\\Users\\cross\\.espressif\\tools\\cmake\\3.20.3\\bin;C:\\Program Files\\Git\\cmd;C:\\Users\\cross\\.espressif\\python_env\\idf4.4_py3.8_env\\Scripts;C:\\Users\\cross\\.espressif;",
+        "PYTHON_EXECUTABLE": "C:\\Users\\cross\\.espressif\\python_env\\idf4.4_py3.8_env\\Scripts",
+        "IDF_PYTHON_ENV_PATH": "C:\\Users\\cross\\.espressif\\python_env\\idf4.4_py3.8_env\\Scripts"
+      }
+    }
+  ]
+}
+```
+
+Set `IDF_PATH` and add those toolset into your `PATH` environment variable, and then install the python dependencies by
+
+```powershell
+python -m pip install --user -r $env:IDF_PATH/requirements.txt
+```
+
+Check [Install the Required Python Packages](https://docs.espressif.com/projects/esp-idf/en/release-v3.3/get-started-cmake/index.html#step-4-install-the-required-python-packages) for more information.
+
+*WHY DON'T I USE COMMAND LINE?*
+
+For the reason I don't know, Visual Studio/VSCode can still read the symbol needed by cmake. I don't know why. Maybe it's `CMakeLists.txt` or `CMakeCache.txt` or something.
+
+### CLion
+
+- [Developing for ESP32 With CLion on Windows - YouTube](https://www.youtube.com/watch?v=M6fa7tzZdLw&t=399s)
+- [Initializing the toolchain environment via a script](https://www.jetbrains.com/help/clion/how-to-create-toolchain-in-clion.html#env-scripts)
+
+Just initialize the toolchain environmentthe with script provided by `esp-idf`.
+
 ## Useful Links
 
 - [esp-idf/examples/wifi/smart_config at espressif/esp-idf](https://github.com/espressif/esp-idf/tree/1cb31e50943bb757966ca91ed7f4852692a5b0ed/examples/wifi/smart_config)

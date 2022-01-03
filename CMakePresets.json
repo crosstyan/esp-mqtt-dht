@@ -1,0 +1,18 @@
+{
+  "version": 2,
+  "configurePresets": [
+    {
+      "name": "esp32",
+      "displayName": "ESP32",
+      "description": "Target ESP32",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "PATH": "C:\\tools\\esp-idf\\components\\esptool_py\\esptool;C:\\tools\\esp-idf\\components\\app_update;C:\\tools\\esp-idf\\components\\espcoredump;C:\\tools\\esp-idf\\components\\partition_table;C:\\Users\\cross\\.espressif\\tools\\cmake\\3.20.3\\bin;C:\\Program Files\\Git\\cmd;C:\\Users\\cross\\.espressif\\python_env\\idf4.4_py3.8_env\\Scripts;C:\\Users\\cross\\.espressif;",
+        "PYTHON_EXECUTABLE": "C:\\Users\\cross\\.espressif\\python_env\\idf4.4_py3.8_env\\Scripts",
+        "IDF_PYTHON_ENV_PATH": "C:\\Users\\cross\\.espressif\\python_env\\idf4.4_py3.8_env\\Scripts"
+      }
+    }
+  ]
+}
