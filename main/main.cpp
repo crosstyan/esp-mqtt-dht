@@ -25,6 +25,11 @@ unsigned long lastMsg = 0;
 char msg[MSG_BUFFER_SIZE];
 int helloCount = 0;
 
+/*
+ * @brief clear preferences
+ * @param void
+ * @return void
+ */
 void clearPreferences(const char *name) {
   preferences.begin(name, false);
   preferences.clear();
@@ -34,6 +39,13 @@ void clearPreferences(const char *name) {
 // The reserved data should be host:port
 // port number is mandatory.
 // Only ipv4 is supported I guess.
+/*
+ * @brief  Parse the MQTT server address and port
+ * @param address
+ * @return err
+ *   0: success
+ *   -1: error
+ */
 int parseAddress(uint8_t *address) {
   char *colonCursor = strstr((char *) address, ":");
   // if address contains colon
@@ -73,7 +85,6 @@ void setup() {
   }
 
   Serial.printf("\tWiFi Setup -- \n");
-
   WiFiInit(); // get WiFi connected
   ipInfo();
   printHex((char *)getRvd);
@@ -107,6 +118,13 @@ void MQTT_reconnect() {
   }
 }
 
+/*
+ * @brief Read and Publish current temperature and humidity to MQTT broker
+ * @param void
+ * @return err
+ *  0: success
+ *  -1: failed
+ */
 int publishTmpHmd() {
   float h = dht.readHumidity();
   // Read temperature as Celsius (the default)
@@ -117,7 +135,7 @@ int publishTmpHmd() {
   // Check if any reads failed and exit early (to try again).
   if (isnan(h) || isnan(t)) {
     Serial.println(F("Failed to read from DHT sensor!"));
-    return 1;
+    return -1;
   }
   snprintf(hMsg, 20, "%.1f", h);
   snprintf(tMsg, 20, "%.1f", t);
