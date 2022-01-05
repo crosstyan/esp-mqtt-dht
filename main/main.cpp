@@ -17,40 +17,73 @@ DHT dht(DHTPIN, DHTTYPE);
 
 WiFiClient espClient;
 PubSubClient client(espClient);
-const char *MQTT_HOST = "192.168.43.4";
-const int MQTT_PORT = 1883;
+char MQTT_HOST[60] = {0};
+// default MQTT port is 1883
+int MQTT_PORT = 1883;
 unsigned long lastMsg = 0;
 #define MSG_BUFFER_SIZE (50)
 char msg[MSG_BUFFER_SIZE];
-int value = 0;
+int helloCount = 0;
+
+void clearPreferences(const char *name) {
+  preferences.begin(name, false);
+  preferences.clear();
+  preferences.end();
+}
+
+// The reserved data should be host:port
+// port number is mandatory.
+// Only ipv4 is supported I guess.
+int parseAddress(uint8_t *address) {
+  char *colonCursor = strstr((char *) address, ":");
+  // if address contains colon
+  if (colonCursor) {
+    MQTT_PORT = atoi(colonCursor + 1);
+    if (MQTT_PORT < 1 || MQTT_PORT > 65535) {
+      // indicate invalid port
+      return -1;
+    }
+    // not include colon
+    memcpy(MQTT_HOST, address, (uint8_t *) colonCursor - address);
+  } else {
+    return -1;
+  }
+  return 0;
+}
+
+void printHex(char * str){
+  // Print out Reserved Data
+  Serial.println((char *) str);
+  // Print out Reserved Data as Hex if it's not empty
+  char *cursor = (char *) str;
+  while (*cursor) {
+    Serial.printf("%02x ", *cursor);
+    cursor++;
+  }
+  Serial.printf("\n");
+}
 
 void setup() {
   Serial.begin(115200);
   // Clear the preferences if the pin is high
-  preferences.begin("wifi", false);
-  bool isSmartConfig = digitalRead(ClearWifiPin);
-  if (isSmartConfig == true) {
+  bool isSmartConfig = digitalRead(CLEAR_WIFI_PIN);
+  if (isSmartConfig) {
     Serial.println("clear config");
-    preferences.clear();
+    clearPreferences(PREF_NAME);
   }
-  preferences.end();
 
   Serial.printf("\tWiFi Setup -- \n");
 
-  wifiInit(); // get WiFi connected
-  // Print out Reserved Data
-  Serial.println((char *)getRvd);
-  // Print out Reserved Data as Hex if it's not empty
-  char *rvdCursor = (char *)getRvd;
-  while (*rvdCursor) {
-    Serial.printf("%02x", *rvdCursor);
-    rvdCursor++;
-  }
-  printf("\n");
+  WiFiInit(); // get WiFi connected
+  ipInfo();
+  printHex((char *)getRvd);
   // end of Printing
-  IP_info();
+  int err = parseAddress(getRvd);
+  if (err) {
+    Serial.println("Invalid address");
+    clearPreferences(PREF_NAME);
+  }
   MAC = getMacAddress();
-  Serial.println(" ");
 
   delay(3000);
   Serial.printf("MQTT Host: %s\n", MQTT_HOST);
@@ -64,10 +97,6 @@ void MQTT_reconnect() {
     Serial.println("Attempting MQTT connection...");
     if (client.connect("ESP32_clientID")) {
       Serial.println("connected");
-      // Once connected, publish an announcement...
-      client.publish("outTopic", "Nodemcu connected to MQTT");
-      // ... and resubscribe
-      client.subscribe("inTopic");
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
@@ -78,7 +107,7 @@ void MQTT_reconnect() {
   }
 }
 
-int readAndPublish() {
+int publishTmpHmd() {
   float h = dht.readHumidity();
   // Read temperature as Celsius (the default)
   float t = dht.readTemperature();
@@ -98,8 +127,17 @@ int readAndPublish() {
   return 0;
 }
 
+int publishHello(int count) {
+  snprintf(msg, MSG_BUFFER_SIZE, "hello world #%d", count);
+  Serial.print("Publish message: ");
+  Serial.println(msg);
+  client.publish("hello", msg);
+  return 0;
+}
+
+
 void loop() {
-  if (WiFi.status() == WL_CONNECTED) {
+  if (likely(WiFi.status() == WL_CONNECTED)) {
     if (!client.connected()) {
       MQTT_reconnect();
     }
@@ -108,43 +146,12 @@ void loop() {
     unsigned long now = millis();
     if (now - lastMsg > 2000) {
       lastMsg = now;
-      ++value;
-      snprintf(msg, MSG_BUFFER_SIZE, "hello world #%d", value);
-      Serial.print("Publish message: ");
-      Serial.println(msg);
-      client.publish("hello", msg);
-      readAndPublish();
+      ++helloCount;
+      publishHello(helloCount);
+      publishTmpHmd();
     }
   } // END Main connected loop()
   else {
-    // WiFi DOWN
-    //  wifi down start LED flasher here
-    WFstatus = getWifiStatus(WFstatus);
-    WiFi.begin(PrefSSID.c_str(), PrefPassword.c_str());
-    int WLcount = 0;
-    while (WiFi.status() != WL_CONNECTED && WLcount < 200) {
-      delay(100);
-      Serial.printf(".");
-
-      if (UpCount >= 60) // keep from scrolling sideways forever
-      {
-        UpCount = 0;
-        Serial.printf("\n");
-      }
-      ++UpCount;
-      ++WLcount;
-    }
-
-    if (getWifiStatus(WFstatus) == 3) {
-      // stop LED flasher, wifi going up
-    } else if (getWifiStatus(WFstatus) == 6) {
-
-      // Should delete it if button is pressed
-      // initSmartConfig();
-      delay(3000);
-      ESP.restart(); // reboot with wifi configured
-    }
-    delay(1000);
-  } // END WiFi down
+    handleWiFiDown();
+  }
 }
-// END loop()

@@ -61,7 +61,7 @@ User's custom data, the max length is 127. The configuration should be easier no
 The device is configured to connect to the AP with [SmartConfig](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/network/esp_smartconfig.html)
 and SSID and password are saved in the device after the first connection.
 
-You can clear these information by connect the `ClearWifiPin` defined in `smart_config.hpp` (defualt GPIO 4).
+You can clear these information by connect the `CLEAR_WIFI_PIN` defined in `smart_config.hpp` (defualt GPIO 4).
 
 Use [ESP-TOUCH](https://www.espressif.com/en/products/software/esp-touch/resources) to configure the device.
 

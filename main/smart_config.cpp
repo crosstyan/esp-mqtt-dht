@@ -1,29 +1,31 @@
 #ifndef SRC_SMART_CONFIG_H_
 #define SRC_SMART_CONFIG_H_
+
 #include "smart_config.hpp"
+
 #endif // SRC_ASYNCMQTTCLIENT_H_
 
-const int ClearWifiPin = 4;
+const int CLEAR_WIFI_PIN = 4;
 
+const char *PREF_NAME = "wifi";
 const char *rssiSSID; // NO MORE hard coded set AP, all SmartConfig
 const char *password;
-String PrefSSID, PrefPassword; // used by preferences storage
-// User's custom data, nullable. If not null, the max length is 127
+String PrefSSID, PrefPassword;
+// used by preferences storage
 
 int WFstatus;
 int UpCount = 0;
 int32_t rssi; // store WiFi signal strength here
 String getSsid;
 String getPass;
-// String getRvd;
+
+// User's custom data, nullable. If not null, the max length is 127
 uint8_t getRvd[128] = {0};
 String MAC;
 
-// SSID storage
-Preferences preferences; // declare class object
-// END SSID storage
+Preferences preferences;
 
-void wifiInit() {
+void WiFiInit() {
   WiFi.mode(WIFI_AP_STA); // required to read NVR before WiFi.begin()
 
   // load credentials from NVR, a little RTOS code here
@@ -33,7 +35,7 @@ void wifiInit() {
   password = reinterpret_cast<const char *>(conf.sta.password);
 
   // Open Preferences with "wifi" namespace. Namespace is limited to 15 chars
-  preferences.begin("wifi", false);
+  preferences.begin(PREF_NAME, false);
   PrefSSID = preferences.getString("ssid", "none");         // NVS key ssid
   PrefPassword = preferences.getString("password", "none"); // NVS key password
   preferences.getBytes("rvd", getRvd, 128); // SmartConfig Reserved Data
@@ -55,6 +57,7 @@ void wifiInit() {
 
   WiFi.begin(PrefSSID.c_str(), PrefPassword.c_str());
 
+  // Line wrap count
   int WLcount = 0;
   while (WiFi.status() != WL_CONNECTED &&
          WLcount < 200) // can take > 100 loops depending on router settings
@@ -67,7 +70,7 @@ void wifiInit() {
 
   //  stop the led flasher here
 
-} // END wifiInit()
+} // END WiFiInit()
 
 // match WiFi IDs in NVS to Pref store,  assumes WiFi.mode(WIFI_AP_STA);  was
 // executed
@@ -80,7 +83,7 @@ bool checkPrefsStore() {
 
   // Open Preferences with my-app namespace. Namespace name is limited to 15
   // chars
-  preferences.begin("wifi", false);
+  preferences.begin(PREF_NAME, false);
   prefssid = preferences.getString("ssid", "none");     // NVS key ssid
   prefpass = preferences.getString("password", "none"); // NVS key password
   preferences.end();
@@ -123,10 +126,10 @@ void initSmartConfig() {
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
   }
-  IP_info(); // connected lets see IP info
-  uint8_t* smartConfigRvdData = WiFi.smartConfigRvdData();
-  memcpy(getRvd, smartConfigRvdData, sizeof(uint8_t)*127);
-  preferences.begin("wifi", false); // put it in storage
+  ipInfo(); // connected lets see IP info
+  uint8_t *smartConfigRvdData = WiFi.smartConfigRvdData();
+  memcpy(getRvd, smartConfigRvdData, sizeof(uint8_t) * 127);
+  preferences.begin(PREF_NAME, false); // put it in storage
   preferences.putString("ssid", getSsid);
   preferences.putString("password", getPass);
   // preferences.putString("rvd", getRvd);
@@ -136,7 +139,7 @@ void initSmartConfig() {
   delay(300);
 } // END SmartConfig()
 
-void IP_info() {
+void ipInfo() {
   getSsid = WiFi.SSID();
   getPass = WiFi.psk();
   rssi = getRSSI(rssiSSID);
@@ -162,29 +165,29 @@ int getWifiStatus(int WiFiStatus) {
   WiFiStatus = WiFi.status();
   Serial.printf("\tStatus %d", WiFiStatus);
   switch (WiFiStatus) {
-  case WL_IDLE_STATUS: // WL_IDLE_STATUS     = 0,
-    Serial.printf(", WiFi IDLE \n");
-    break;
-  case WL_NO_SSID_AVAIL: // WL_NO_SSID_AVAIL   = 1,
-    Serial.printf(", NO SSID AVAIL \n");
-    break;
-  case WL_SCAN_COMPLETED: // WL_SCAN_COMPLETED  = 2,
-    Serial.printf(", WiFi SCAN_COMPLETED \n");
-    break;
-  case WL_CONNECTED: // WL_CONNECTED       = 3,
-    Serial.printf(", WiFi CONNECTED \n");
-    break;
-  case WL_CONNECT_FAILED: // WL_CONNECT_FAILED  = 4,
-    Serial.printf(", WiFi WL_CONNECT FAILED\n");
-    break;
-  case WL_CONNECTION_LOST: // WL_CONNECTION_LOST = 5,
-    Serial.printf(", WiFi CONNECTION LOST\n");
-    WiFi.persistent(false); // don't write FLASH
-    break;
-  case WL_DISCONNECTED: // WL_DISCONNECTED    = 6
-    Serial.printf(", WiFi DISCONNECTED ==\n");
-    WiFi.persistent(false); // don't write FLASH when reconnecting
-    break;
+    case WL_IDLE_STATUS: // WL_IDLE_STATUS     = 0,
+      Serial.printf(", WiFi IDLE \n");
+      break;
+    case WL_NO_SSID_AVAIL: // WL_NO_SSID_AVAIL   = 1,
+      Serial.printf(", NO SSID AVAIL \n");
+      break;
+    case WL_SCAN_COMPLETED: // WL_SCAN_COMPLETED  = 2,
+      Serial.printf(", WiFi SCAN_COMPLETED \n");
+      break;
+    case WL_CONNECTED: // WL_CONNECTED       = 3,
+      Serial.printf(", WiFi CONNECTED \n");
+      break;
+    case WL_CONNECT_FAILED: // WL_CONNECT_FAILED  = 4,
+      Serial.printf(", WiFi WL_CONNECT FAILED\n");
+      break;
+    case WL_CONNECTION_LOST: // WL_CONNECTION_LOST = 5,
+      Serial.printf(", WiFi CONNECTION LOST\n");
+      WiFi.persistent(false); // don't write FLASH
+      break;
+    case WL_DISCONNECTED: // WL_DISCONNECTED    = 6
+      Serial.printf(", WiFi DISCONNECTED ==\n");
+      WiFi.persistent(false); // don't write FLASH when reconnecting
+      break;
   }
   return WiFiStatus;
 }
@@ -236,4 +239,35 @@ String getSsidPass(String s) {
     val = String(reinterpret_cast<const char *>(conf.sta.password));
   }
   return val;
+}
+
+// WiFi DOWN
+void handleWiFiDown() {
+  //  wifi down start LED flasher here
+  WFstatus = getWifiStatus(WFstatus);
+  WiFi.begin(PrefSSID.c_str(), PrefPassword.c_str());
+  int WLcount = 0;
+  while (WiFi.status() != WL_CONNECTED && WLcount < 200) {
+    delay(100);
+    Serial.printf(".");
+
+    if (UpCount >= 60) // keep from scrolling sideways forever
+    {
+      UpCount = 0;
+      Serial.printf("\n");
+    }
+    ++UpCount;
+    ++WLcount;
+  }
+
+  if (getWifiStatus(WFstatus) == 3) {
+    // stop LED flasher, wifi going up
+  } else if (getWifiStatus(WFstatus) == 6) {
+
+    // Should delete it if button is pressed
+    // initSmartConfig();
+    delay(3000);
+    ESP.restart(); // reboot with wifi configured
+  }
+  delay(1000);
 }

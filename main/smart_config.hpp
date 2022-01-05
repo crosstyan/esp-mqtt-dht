@@ -8,8 +8,10 @@
 #include <esp_wifi.h>
 #include <string.h>
 
-extern const int ClearWifiPin;
+// All defined in .cpp files
+extern const int CLEAR_WIFI_PIN;
 
+extern const char *PREF_NAME;
 extern const char *rssiSSID; // NO MORE hard coded set AP, all SmartConfig
 extern const char *password;
 extern String PrefSSID, PrefPassword; // used by preferences storage
@@ -26,10 +28,11 @@ extern uint8_t getRvd[128];
 extern Preferences preferences; // declare class object
 // END SSID storage
 
-void wifiInit();
+void WiFiInit();
 bool checkPrefsStore();
 void initSmartConfig();
-void IP_info();
+void ipInfo();
+void handleWiFiDown();
 int getWifiStatus(int WiFiStatus);
 int32_t getRSSI(const char *target_ssid);
 String getMacAddress(void);
