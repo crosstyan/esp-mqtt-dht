@@ -85,11 +85,13 @@ void setup() {
   }
 
   Serial.printf("\tWiFi Setup -- \n");
-  WiFiInit(); // get WiFi connected
+  WiFiInit(); // get Wi-Fi connected
+  // At this point, ReservedData i.e. reserved data has been prepared
+  // You can access it safely
   ipInfo();
-  printHex((char *)getRvd);
+  printHex((char *)ReservedData);
   // end of Printing
-  int err = parseAddress(getRvd);
+  int err = parseAddress(ReservedData);
   if (err) {
     Serial.println("Invalid address");
     clearPreferences(PREF_NAME);

@@ -13,32 +13,31 @@ const char *password;
 String PrefSSID, PrefPassword;
 // used by preferences storage
 
-int WFstatus;
-int UpCount = 0;
-int32_t rssi; // store WiFi signal strength here
-String getSsid;
-String getPass;
+int WiFiStatus;
+int32_t rssi; // store Wi-Fi signal strength here
+String WiFiSSID;
+String WiFiPassword;
 
 // User's custom data, nullable. If not null, the max length is 127
-uint8_t getRvd[128] = {0};
+uint8_t ReservedData[128] = {0};
 String MAC;
 
 Preferences preferences;
 
 void WiFiInit() {
-  WiFi.mode(WIFI_AP_STA); // required to read NVR before WiFi.begin()
+  WiFi.mode(WIFI_AP_STA); // required to read NVR before Wi-Fi.begin()
 
   // load credentials from NVR, a little RTOS code here
   wifi_config_t conf;
-  esp_wifi_get_config(WIFI_IF_STA, &conf); // load wifi settings to struct comf
+  esp_wifi_get_config(WIFI_IF_STA, &conf); // load Wi-Fi settings to struct conf
   rssiSSID = reinterpret_cast<const char *>(conf.sta.ssid);
   password = reinterpret_cast<const char *>(conf.sta.password);
 
-  // Open Preferences with "wifi" namespace. Namespace is limited to 15 chars
+  // Open Preferences with "Wi-Fi" namespace. Namespace is limited to 15 chars
   preferences.begin(PREF_NAME, false);
   PrefSSID = preferences.getString("ssid", "none");         // NVS key ssid
   PrefPassword = preferences.getString("password", "none"); // NVS key password
-  preferences.getBytes("rvd", getRvd, 128); // SmartConfig Reserved Data
+  preferences.getBytes("rvd", ReservedData, 128); // SmartConfig Reserved Data
   preferences.end();
 
   // keep from rewriting flash if not needed
@@ -49,7 +48,7 @@ void WiFiInit() {
     if (PrefSSID == "none") {
       initSmartConfig();
       delay(3000);
-      ESP.restart(); // reboot with wifi configured
+      ESP.restart(); // reboot with Wi-Fi configured
     }
   }
 
@@ -58,37 +57,37 @@ void WiFiInit() {
   WiFi.begin(PrefSSID.c_str(), PrefPassword.c_str());
 
   // Line wrap count
-  int WLcount = 0;
+  int wrapCount = 0;
   while (WiFi.status() != WL_CONNECTED &&
-         WLcount < 200) // can take > 100 loops depending on router settings
+         wrapCount < 200) // can take > 100 loops depending on router settings
   {
     delay(100);
     Serial.printf(".");
-    ++WLcount;
+    ++wrapCount;
   }
   delay(3000);
 
-  //  stop the led flasher here
+  //  stop the LED flasher here
 
 } // END WiFiInit()
 
-// match WiFi IDs in NVS to Pref store,  assumes WiFi.mode(WIFI_AP_STA);  was
+// match Wi-Fi IDs in NVS to Pref store,  assumes WiFi.mode(WIFI_AP_STA);  was
 // executed
 bool checkPrefsStore() {
   bool val = false;
-  String NVssid, NVpass, prefssid, prefpass;
+  String NvSSID, NvPassword, prefSSID, prefPassword;
 
-  NVssid = getSsidPass("ssid");
-  NVpass = getSsidPass("pass");
+  NvSSID = getSsidPass("ssid");
+  NvPassword = getSsidPass("pass");
 
   // Open Preferences with my-app namespace. Namespace name is limited to 15
   // chars
   preferences.begin(PREF_NAME, false);
-  prefssid = preferences.getString("ssid", "none");     // NVS key ssid
-  prefpass = preferences.getString("password", "none"); // NVS key password
+  prefSSID = preferences.getString("ssid", "none");     // NVS key ssid
+  prefPassword = preferences.getString("password", "none"); // NVS key password
   preferences.end();
 
-  if (NVssid.equals(prefssid) && NVpass.equals(prefpass)) {
+  if (NvSSID.equals(prefSSID) && NvPassword.equals(prefPassword)) {
     val = true;
   }
 
@@ -96,12 +95,12 @@ bool checkPrefsStore() {
 }
 
 // optionally call this function any way you want in your own code
-// to remap WiFi to another AP using SmartConfig mode.   Button, condition etc..
+// to remap Wi-Fi to another AP using SmartConfig mode.   Button, condition etc..
 void initSmartConfig() {
   // start LED flasher
   int loopCounter = 0;
 
-  WiFi.mode(WIFI_AP_STA); // Init WiFi, start SmartConfig
+  WiFi.mode(WIFI_AP_STA); // Init Wi-Fi, start SmartConfig
   Serial.printf("Entering SmartConfig\n");
 
   WiFi.beginSmartConfig();
@@ -128,28 +127,28 @@ void initSmartConfig() {
   }
   ipInfo(); // connected lets see IP info
   uint8_t *smartConfigRvdData = WiFi.smartConfigRvdData();
-  memcpy(getRvd, smartConfigRvdData, sizeof(uint8_t) * 127);
+  memcpy(ReservedData, smartConfigRvdData, sizeof(uint8_t) * 127);
   preferences.begin(PREF_NAME, false); // put it in storage
-  preferences.putString("ssid", getSsid);
-  preferences.putString("password", getPass);
-  // preferences.putString("rvd", getRvd);
-  preferences.putBytes("rvd", getRvd, 128);
+  preferences.putString("ssid", WiFiSSID);
+  preferences.putString("password", WiFiPassword);
+  // preferences.putString("rvd", ReservedData);
+  preferences.putBytes("rvd", ReservedData, 128);
   preferences.end();
 
   delay(300);
 } // END SmartConfig()
 
 void ipInfo() {
-  getSsid = WiFi.SSID();
-  getPass = WiFi.psk();
+  WiFiSSID = WiFi.SSID();
+  WiFiPassword = WiFi.psk();
   rssi = getRSSI(rssiSSID);
-  WFstatus = getWifiStatus(WFstatus);
+  WiFiStatus = getWifiStatus(WiFiStatus);
   MAC = getMacAddress();
 
-  Serial.printf("\n\n\tSSID\t%s, ", getSsid.c_str());
+  Serial.printf("\n\n\tSSID\t%s, ", WiFiSSID.c_str());
   Serial.print(rssi);
   Serial.printf(" dBm\n"); // printf??
-  Serial.printf("\tPass:\t %s\n", getPass.c_str());
+  Serial.printf("\tPass:\t %s\n", WiFiPassword.c_str());
   Serial.print("\n\n\tIP address:\t");
   Serial.print(WiFi.localIP());
   Serial.print(" / ");
@@ -196,9 +195,9 @@ int getWifiStatus(int WiFiStatus) {
 // @param     void
 // @return String MAC
 String getMacAddress(void) {
-  WiFi.mode(WIFI_AP_STA); // required to read NVR before WiFi.begin()
+  WiFi.mode(WIFI_AP_STA); // required to read NVR before Wi-Fi.begin()
   uint8_t baseMac[6];
-  esp_read_mac(baseMac, ESP_MAC_WIFI_STA); // Get MAC address for WiFi station
+  esp_read_mac(baseMac, ESP_MAC_WIFI_STA); // Get MAC address for Wi-Fi station
   char macStr[18] = {0};
   sprintf(macStr, "%02X:%02X:%02X:%02X:%02X:%02X", baseMac[0], baseMac[1],
           baseMac[2], baseMac[3], baseMac[4], baseMac[5]);
@@ -223,7 +222,7 @@ int32_t getRSSI(const char *target_ssid) {
 // Maybe it's not a bad choose though.
 // TODO: Use enum instead
 // Requires; #include <esp_wifi.h>
-// Returns String NONE, ssid or pass arcording to request
+// Returns String NONE, ssid or pass according to request
 // ie String var = getSsidPass( "pass" );
 String getSsidPass(String s) {
   String val = "NONE"; // return "NONE" if wrong key sent
@@ -243,31 +242,31 @@ String getSsidPass(String s) {
 
 // WiFi DOWN
 void handleWiFiDown() {
-  //  wifi down start LED flasher here
-  WFstatus = getWifiStatus(WFstatus);
+  //  Wi-Fi down start LED flasher here
+  WiFiStatus = getWifiStatus(WiFiStatus);
   WiFi.begin(PrefSSID.c_str(), PrefPassword.c_str());
-  int WLcount = 0;
-  while (WiFi.status() != WL_CONNECTED && WLcount < 200) {
+  int WiFiDownCount = 0;
+  int wrapCount = 0;
+  while (WiFi.status() != WL_CONNECTED && WiFiDownCount < 200) {
     delay(100);
     Serial.printf(".");
-
-    if (UpCount >= 60) // keep from scrolling sideways forever
-    {
-      UpCount = 0;
+    // keep from scrolling sideways forever
+    if (wrapCount >= 60){
+      wrapCount = 0;
       Serial.printf("\n");
     }
-    ++UpCount;
-    ++WLcount;
+    ++wrapCount;
+    ++WiFiDownCount;
   }
 
-  if (getWifiStatus(WFstatus) == 3) {
-    // stop LED flasher, wifi going up
-  } else if (getWifiStatus(WFstatus) == 6) {
+  if (getWifiStatus(WiFiStatus) == 3) {
+    // stop LED flasher, Wi-Fi going up
+  } else if (getWifiStatus(WiFiStatus) == 6) {
 
     // Should delete it if button is pressed
     // initSmartConfig();
     delay(3000);
-    ESP.restart(); // reboot with wifi configured
+    ESP.restart(); // reboot with Wi-Fi configured
   }
   delay(1000);
 }

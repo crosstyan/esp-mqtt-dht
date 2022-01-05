@@ -16,13 +16,13 @@ extern const char *rssiSSID; // NO MORE hard coded set AP, all SmartConfig
 extern const char *password;
 extern String PrefSSID, PrefPassword; // used by preferences storage
 
-extern int WFstatus;
+extern int WiFiStatus;
 extern int UpCount;
 extern int32_t rssi; // store WiFi signal strength here
-extern String getSsid;
-extern String getPass;
+extern String WiFiSSID;
+extern String WiFiPassword;
 extern String MAC;
-extern uint8_t getRvd[128];
+extern uint8_t ReservedData[128];
 
 // SSID storage
 extern Preferences preferences; // declare class object
